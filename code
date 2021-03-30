@@ -1,0 +1,196 @@
+//function to find the shortest path
+function findShortestPath(matrix, row, col, start, end, house1, house2, house3){
+
+    //created a visited array and initialising with false to keep a track of the visited nodes
+    var visited = new Array(row).fill(false);
+    for(let i=0; i<row; i++){
+        visited[i] = new Array(col).fill(false);
+    }
+
+    //parented parent array and initialising with null to back track and return the index value of the path
+    var parent = new Array(row).fill(null);
+    for(let i=0; i<row; i++){
+        parent[i] = new Array(col).fill(null);
+    }
+
+    //creating empty queue and pushing the start value into it and also assigning the start value at parent[start] location in order to avoid returning null value
+    var queue = [];
+    queue.push([start[0],start[1]]);
+    parent[start[0]][start[1]] = start; 
+
+    //the loops keeps executing until queue gets empty or the destination is reached
+    while(queue.length != 0){
+
+        //removing the first index of the queue and making that index position in visited array as true
+        var curr = queue.shift();
+        visited[curr[0]][curr[1]] = true;
+
+        //if the destination is reached perform back tracking on parent array and return the path and length of the path
+        if(curr[0] == end[0] && curr[1] == end[1]){
+            var currPath = [start];
+            while(parent[curr[0]][curr[1]] != start){
+                curr = parent[curr[0]][curr[1]];
+                currPath.push([curr[0],curr[1]]);
+            }
+            return [currPath, currPath.length];
+        }
+
+        /*if destination is not found explore the neighbors of the current index position
+        if the current position is whithin the boundaries of the map, the index value is not equal to "#" or any of the houses and the index position has not been visited
+        then add the new index position in the queue and mark the parent[new index position] = current index position (helpful in backtracking)*/
+
+        // x++ / DOWN
+        if((curr[0]+1)<row && matrix[curr[0]+1][curr[1]] != "#" && matrix[curr[0]+1][curr[1]] != house1 && matrix[curr[0]+1][curr[1]] != house2 && matrix[curr[0]+1][curr[1]] != house3 && !visited[curr[0]+1][curr[1]]){
+            queue.push([curr[0]+1,curr[1]]);
+            parent[curr[0]+1][curr[1]] = curr;
+        }
+
+        // y-- / LEFT
+        if((curr[1]-1)>=0 && matrix[curr[0]][curr[1]-1] != "#" && matrix[curr[0]][curr[1]-1] != house1 && matrix[curr[0]][curr[1]-1] != house2 && matrix[curr[0]][curr[1]-1] != house3 && !visited[curr[0]][curr[1]-1]){
+            queue.push([curr[0],curr[1]-1]);
+            parent[curr[0]][curr[1]-1] = curr; 
+        }
+
+        // x-- / UP
+        if((curr[0]-1)>=0 && matrix[curr[0]-1][curr[1]] != "#" && matrix[curr[0]-1][curr[1]] != house1 && matrix[curr[0]-1][curr[1]] != house2 && matrix[curr[0]-1][curr[1]] != house3 && !visited[curr[0]-1][curr[1]]){
+            queue.push([curr[0]-1,curr[1]]);
+            parent[curr[0]-1][curr[1]] = curr;
+        }
+
+         // y++ / RIGHT
+        if((curr[1]+1)<col && matrix[curr[0]][curr[1]+1] != "#" && matrix[curr[0]][curr[1]+1] != house1 && matrix[curr[0]][curr[1]+1] != house2 && matrix[curr[0]][curr[1]+1] != house3 && !visited[curr[0]][curr[1]+1]){
+            queue.push([curr[0],curr[1]+1]);
+            parent[curr[0]][curr[1]+1] = curr;
+        }
+
+    }
+
+    //if the index does not connect to all the houses then return and empty array and negative distance
+    return [[],-99999];
+}
+
+
+//making changes in the map that is showing the position where the snow is to be cleared
+function changeMap(path){
+    for(let k=0; k<path.length-1;k++){
+        var row = path[k][0];
+        var col = path[k][1];
+        for(let i = 0; i<myMap.length; i++){
+            for(let j=0; j<myMap.length; j++){
+
+                //not changing the indexes to "." that have houses as value 
+                if((i==row && j==col) && myMap[row][col] != "A" && myMap[row][col] != "B" && myMap[row][col] != "C" && myMap[row][col] != "D"){
+                    myMap[i][j] = ".";
+                }
+            }
+        }
+    } 
+}
+
+//prints the resultant map
+function printMap(arr){ 
+    var arrText="";
+    for(let i=0; i<arr.length; i++){
+        for(let j=0; j<arr.length; j++){
+                arrText += arr[i][j] + " ";
+        }
+        console.log(arrText);
+        arrText="";
+    }
+}
+
+//finds and returns the index position of the houses
+function findIndex(arr,value){
+    var row, col;
+    for(let i=0; i<arr.length; i++){
+        for(let j=0; j<arr.length; j++){
+            if(arr[i][j]==value){
+                row = i;
+                col = j;
+            }
+        }
+    }
+    return [row,col];
+}
+
+
+//MAIN FUNCTION
+
+var myMap = [   ["o","o","o","o","o","o","o","o"],
+                ["o","o","o","o","o","o","B","o"],
+                ["#","#","#","o","#","#","#","#"],
+                ["C","o","#","o","o","o","o","o"],
+                ["o","o","#","o","o","D","o","o"],
+                ["o","o","o","o","o","o","o","o"],
+                ["o","o","A","o","o","o","o","o"],
+                ["o","o","o","o","o","o","o","o"]   ];
+
+//Extracting location of all he houses 
+var loc_A=findIndex(myMap,"A");
+var loc_B=findIndex(myMap,"B");
+var loc_C=findIndex(myMap,"C");
+var loc_D=findIndex(myMap,"D");
+
+
+var resultLength=0;
+var result;
+var minLength = Number.MAX_VALUE;
+var minPoint_i, minPoint_j;
+var pathExists = true;
+
+for(let i=0; i<myMap.length; i++){
+    loop2:
+    for(let j=0; j<myMap[0].length; j++ ){
+        if(myMap[i][j] != "#"){ //not exploring the indexes with value of #
+            resultLength = 0;
+
+            //find length of the path from position [i,i] to house A, B, C, D respectively and adding up all the lengths
+            resultLength += (findShortestPath(myMap, myMap.length, myMap[0].length, [i,j], loc_A, "C", "D","B"))[1];
+            resultLength += (findShortestPath(myMap, myMap.length, myMap[0].length, [i,j], loc_B, "C", "D","A"))[1];
+            resultLength += (findShortestPath(myMap, myMap.length, myMap[0].length, [i,j], loc_C, "A", "D","B"))[1];
+            resultLength += (findShortestPath(myMap, myMap.length, myMap[0].length, [i,j], loc_D, "C", "A","B"))[1];
+
+            //if the resultLength is negative that means that point does not connect to all the four houses and should be skipped
+            if(resultLength <0){
+                pathExists=false;
+                continue loop2;
+            }
+
+            //conparing the minLength and resultLength on each iteration to get an index that gives the minimumlength connecting to all the four houses
+            if(resultLength < minLength){
+                pathExists=true;
+                minLength = resultLength;
+                minPoint_i=i;
+                minPoint_j=j;
+            }
+        } 
+    }
+}
+
+//checking if we have a point that connects all the four houses
+if(pathExists==true){
+
+    //getting the path from midpoint to A and marking the changes in our map
+    result = (findShortestPath(myMap, myMap.length, myMap[0].length, [minPoint_i,minPoint_j], loc_A, "B", "C","D"))[0];
+    changeMap(result);
+
+    //getting the path from midpoint to B and marking the changes in our map
+    result = (findShortestPath(myMap, myMap.length, myMap[0].length, [minPoint_i,minPoint_j], loc_B, "A", "C","D"))[0];
+    changeMap(result);
+
+    //getting the path from midpoint to C and marking the changes in our map
+    result = (findShortestPath(myMap, myMap.length, myMap[0].length, [minPoint_i,minPoint_j], loc_C, "A", "B","D"))[0];
+    changeMap(result);
+
+    //getting the path from midpoint to D and marking the changes in our map
+    result = (findShortestPath(myMap, myMap.length, myMap[0].length, [minPoint_i,minPoint_j], loc_D, "A", "B","C"))[0];
+    changeMap(result);
+
+    //printing the resultant map
+    printMap(myMap);
+}
+
+//if no index exists that connects all the 4 houses
+else{
+    console.log("There is no path that connects all four houses to each other.");
+}
